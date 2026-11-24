@@ -1,0 +1,16 @@
+.git
+**/.git
+node_modules
+**/node_modules
+.next
+**/.next
+**/.env
+**/.env.*
+!**/.env.example
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+apps/backend-ai/notebooks
+apps/backend-ai/scripts
+apps/backend-ai/tests

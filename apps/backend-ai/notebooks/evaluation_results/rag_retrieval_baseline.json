@@ -1,0 +1,20 @@
+{
+    "embedding_model": "jina-embeddings-v5-text-small",
+    "embedding_dimensions": 1024,
+    "chunking": {
+        "strategy": "RecursiveCharacterTextSplitter",
+        "chunk_size": 800,
+        "chunk_overlap": 120,
+        "total_chunks": 33
+    },
+    "dataset": {
+        "documents": 12,
+        "queries": 12
+    },
+    "metrics": {
+        "mean_recall_at_3": 1.0,
+        "mean_precision_at_3": 1.0,
+        "mrr": 1.0
+    },
+    "evaluation_status": "initial_benchmark"
+}

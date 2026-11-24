@@ -1,0 +1,16 @@
+test_id,detector,run,elapsed_ms,status,error
+CONS-001,prompt_injection,1,2596.92,ERROR,ProviderRateLimitError
+CONS-001,prompt_injection,2,2024.8,ERROR,ProviderRateLimitError
+CONS-001,prompt_injection,3,2139.63,ERROR,ProviderRateLimitError
+CONS-001,prompt_injection,4,2136.64,ERROR,ProviderRateLimitError
+CONS-001,prompt_injection,5,1823.34,ERROR,ProviderRateLimitError
+CONS-002,prompt_injection,1,2209.7,ERROR,ProviderRateLimitError
+CONS-002,prompt_injection,2,1885.86,ERROR,ProviderRateLimitError
+CONS-002,prompt_injection,3,1943.53,ERROR,ProviderRateLimitError
+CONS-002,prompt_injection,4,1973.99,ERROR,ProviderRateLimitError
+CONS-002,prompt_injection,5,2167.49,ERROR,ProviderRateLimitError
+CONS-003,output_safety,1,1892.19,ERROR,ProviderRateLimitError
+CONS-003,output_safety,2,1875.61,ERROR,ProviderRateLimitError
+CONS-003,output_safety,3,1838.13,ERROR,ProviderRateLimitError
+CONS-003,output_safety,4,2116.03,ERROR,ProviderRateLimitError
+CONS-003,output_safety,5,1981.91,ERROR,ProviderRateLimitError

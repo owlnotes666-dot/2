@@ -1,0 +1,3 @@
+detector,error,total_requests,failed_requests,avg_error_time_ms
+output_safety,ProviderRateLimitError,5,5,1940.77
+prompt_injection,ProviderRateLimitError,10,10,2090.19

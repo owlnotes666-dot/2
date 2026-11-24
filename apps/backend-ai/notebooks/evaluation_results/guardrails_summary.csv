@@ -1,0 +1,3 @@
+detector,total,passed,failed,errors,accuracy_pct,error_rate_pct
+output_safety,5,5,0,0,100.0,0.0
+prompt_injection,5,5,0,0,100.0,0.0
