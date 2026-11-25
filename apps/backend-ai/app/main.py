@@ -6,12 +6,21 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.core.security_audit import audit_security_event
-from app.features.ai_assistant.api.routes import router as ai_assistant_router
-from app.features.support.api.routes import router as support_router
+
+from app.features.ai_assistant.api.routes import (
+    router as ai_assistant_router,
+)
+from app.features.support.api.routes import (
+    router as support_router,
+)
+from app.features.customer.api.routes import (
+    router as customer_router,
+)
+
 
 app = FastAPI(
     title=settings.app_name,
-    description="AI Assistant API for Medical Dashboard",
+    description="AI Customer Support",
     version="1.0.0",
 )
 
@@ -52,6 +61,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(
     ai_assistant_router,
     prefix=settings.api_v1_prefix,
@@ -62,11 +72,16 @@ app.include_router(
     prefix=settings.api_v1_prefix,
 )
 
+app.include_router(
+    customer_router,
+    prefix=settings.api_v1_prefix,
+)
+
 
 @app.get("/")
 async def root():
     return {
-        "message": "Medical Dashboard AI Backend is running",
+        "message": "AI Customers Support  Backend is running",
     }
 
 
