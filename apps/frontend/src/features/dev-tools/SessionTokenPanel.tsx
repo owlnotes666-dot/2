@@ -89,7 +89,7 @@ export default function SessionTokenPanel() {
             value={token}
             placeholder="Load your session first..."
             rows={5}
-            className="w-full rounded-lg border bg-gray-50 p-3 font-mono text-xs"
+            className="w-full rounded-lg border bg-gray-500 p-3 font-mono text-xs"
             style={{
               WebkitTextSecurity: visible ? "none" : "disc",
             } as React.CSSProperties}
