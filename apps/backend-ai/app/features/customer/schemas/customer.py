@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 CustomerTicketStatus = Literal[
@@ -31,9 +31,23 @@ class CustomerTicketCreateRequest(BaseModel):
     subject: str = Field(min_length=3, max_length=200)
     message: str = Field(min_length=1, max_length=5000)
 
+    @field_validator("subject", "message", mode="before")
+    @classmethod
+    def strip_text_fields(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
 
 class CustomerMessageCreateRequest(BaseModel):
     content: str = Field(min_length=1, max_length=5000)
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def strip_content(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.strip()
+        return value
 
 
 class CustomerMessageResponse(BaseModel):
