@@ -2,7 +2,6 @@ import logging
 from typing import Literal
 
 from fastapi import Depends, HTTPException, status
-from pydantic import BaseModel
 
 from app.core.dependencies.auth import (
     AuthenticatedUser,
