@@ -20,6 +20,12 @@ TicketPriority = Literal[
     "urgent",
 ]
 
+MessageSenderType = Literal[
+    "customer",
+    "agent",
+    "system",
+]
+
 
 class TicketCustomerResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -36,6 +42,37 @@ class TicketTeamResponse(BaseModel):
     name: str
 
 
+class TicketCategoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+
+
+class TicketMessageResponse(BaseModel):
+    id: UUID
+    sender_type: MessageSenderType
+    sender_profile_id: UUID | None = None
+    customer_id: UUID | None = None
+    content: str
+    is_internal: bool
+    created_at: datetime
+
+
+class TicketAssignmentResponse(BaseModel):
+    id: UUID
+    from_team_id: UUID | None = None
+    to_team_id: UUID
+    from_agent_id: UUID | None = None
+    to_agent_id: UUID | None = None
+    changed_by: UUID | None = None
+    reason: str | None = None
+    created_at: datetime
+
+    from_team: TicketTeamResponse | None = None
+    to_team: TicketTeamResponse | None = None
+
+
 class TicketResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,6 +87,7 @@ class TicketResponse(BaseModel):
 
     customer: TicketCustomerResponse
     team: TicketTeamResponse | None = None
+    category: TicketCategoryResponse | None = None
     assigned_agent_id: UUID | None = None
 
 
@@ -58,3 +96,8 @@ class TicketListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class TicketDetailsResponse(TicketResponse):
+    messages: list[TicketMessageResponse]
+    assignment_history: list[TicketAssignmentResponse]

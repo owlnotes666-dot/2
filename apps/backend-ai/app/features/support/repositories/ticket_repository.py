@@ -70,11 +70,111 @@ class TicketRepository:
         start = (page - 1) * page_size
         end = start + page_size - 1
 
-        response = (
+        return (
             query
             .order("created_at", desc=True)
             .range(start, end)
             .execute()
         )
 
-        return response
+    def get_ticket(self, ticket_id: UUID):
+        response = (
+            self.client.schema("support")
+            .table("tickets")
+            .select(
+                """
+                id,
+                ticket_number,
+                subject,
+                status,
+                priority,
+                source,
+                created_at,
+                updated_at,
+                assigned_agent_id,
+                customer:customers!tickets_customer_id_fkey(
+                    id,
+                    full_name,
+                    email
+                ),
+                team:teams!tickets_team_id_fkey(
+                    id,
+                    name
+                ),
+                category:ticket_categories!tickets_category_id_fkey(
+                    id,
+                    name
+                )
+                """
+            )
+            .eq("id", str(ticket_id))
+            .limit(1)
+            .execute()
+        )
+
+        return response.data[0] if response.data else None
+
+    def get_conversation(self, ticket_id: UUID):
+        response = (
+            self.client.schema("support")
+            .table("conversations")
+            .select("id")
+            .eq("ticket_id", str(ticket_id))
+            .limit(1)
+            .execute()
+        )
+
+        return response.data[0] if response.data else None
+
+    def list_messages(self, conversation_id: UUID):
+        response = (
+            self.client.schema("support")
+            .table("messages")
+            .select(
+                """
+                id,
+                sender_type,
+                sender_profile_id,
+                customer_id,
+                content,
+                is_internal,
+                created_at
+                """
+            )
+            .eq("conversation_id", str(conversation_id))
+            .order("created_at", desc=False)
+            .execute()
+        )
+
+        return response.data
+
+    def list_assignment_history(self, ticket_id: UUID):
+        response = (
+            self.client.schema("support")
+            .table("ticket_assignments")
+            .select(
+                """
+                id,
+                from_team_id,
+                to_team_id,
+                from_agent_id,
+                to_agent_id,
+                changed_by,
+                reason,
+                created_at,
+                from_team:teams!ticket_assignments_from_team_id_fkey(
+                    id,
+                    name
+                ),
+                to_team:teams!ticket_assignments_to_team_id_fkey(
+                    id,
+                    name
+                )
+                """
+            )
+            .eq("ticket_id", str(ticket_id))
+            .order("created_at", desc=False)
+            .execute()
+        )
+
+        return response.data

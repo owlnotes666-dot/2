@@ -7,9 +7,18 @@ from app.core.dependencies.support_auth import (
     SupportUser,
     get_current_support_user,
 )
-from app.features.support.schemas.auth import SupportProfileResponse
-from app.features.support.schemas.ticket import TicketListResponse
+
+from app.features.support.schemas.auth import (
+    SupportProfileResponse,
+)
+
+from app.features.support.schemas.ticket import (
+    TicketDetailsResponse,
+    TicketListResponse,
+)
+
 from app.features.support.services.ticket_service import (
+    get_support_ticket_details,
     list_support_tickets,
 )
 
@@ -65,4 +74,18 @@ def get_support_tickets(
         search=search,
         page=page,
         page_size=page_size,
+    )
+
+
+@router.get(
+    "/tickets/{ticket_id}",
+    response_model=TicketDetailsResponse,
+)
+def get_support_ticket(
+    ticket_id: UUID,
+    current_user: SupportUser = Depends(get_current_support_user),
+):
+    return get_support_ticket_details(
+        current_user,
+        ticket_id,
     )
