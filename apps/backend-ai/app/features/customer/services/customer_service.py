@@ -23,11 +23,29 @@ logger = logging.getLogger(__name__)
 
 
 def _get_repository(current_user: CustomerUser):
+    if current_user.access_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required.",
+        )
+
     supabase = get_supabase_user_client(
         current_user.access_token.get_secret_value()
     )
 
     return CustomerRepository(supabase)
+
+
+def _validate_text(value: str, *, field: str, minimum: int, maximum: int) -> str:
+    normalized = value.strip()
+
+    if not minimum <= len(normalized) <= maximum:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{field} must contain between {minimum} and {maximum} non-whitespace characters.",
+        )
+
+    return normalized
 
 
 def get_customer_profile(
@@ -71,6 +89,7 @@ def list_customer_tickets(
         repository = _get_repository(current_user)
 
         response = repository.list_tickets(
+            customer_id=current_user.customer_id,
             page=page,
             page_size=page_size,
             status=status_filter,
@@ -104,7 +123,10 @@ def get_customer_ticket_details(
     try:
         repository = _get_repository(current_user)
 
-        ticket = repository.get_ticket(ticket_id)
+        ticket = repository.get_ticket(
+            ticket_id,
+            customer_id=current_user.customer_id,
+        )
 
         if ticket is None:
             raise HTTPException(
@@ -144,12 +166,25 @@ def create_customer_ticket(
     subject: str,
     message: str,
 ) -> CustomerTicketCreatedResponse:
+    normalized_subject = _validate_text(
+        subject,
+        field="Subject",
+        minimum=3,
+        maximum=200,
+    )
+    normalized_message = _validate_text(
+        message,
+        field="Message",
+        minimum=1,
+        maximum=5000,
+    )
+
     try:
         repository = _get_repository(current_user)
 
         response = repository.create_ticket(
-            subject=subject.strip(),
-            message=message.strip(),
+            subject=normalized_subject,
+            message=normalized_message,
         )
 
         if not response.data:
@@ -163,6 +198,9 @@ def create_customer_ticket(
             conversation_id=result["conversation_id"],
             message_id=result["message_id"],
         )
+
+    except HTTPException:
+        raise
 
     except Exception:
         logger.exception("Failed to create customer ticket.")
@@ -179,10 +217,20 @@ def send_customer_message(
     *,
     content: str,
 ):
+    normalized_content = _validate_text(
+        content,
+        field="Message",
+        minimum=1,
+        maximum=5000,
+    )
+
     try:
         repository = _get_repository(current_user)
 
-        ticket = repository.get_ticket(ticket_id)
+        ticket = repository.get_ticket(
+            ticket_id,
+            customer_id=current_user.customer_id,
+        )
 
         if ticket is None:
             raise HTTPException(
@@ -201,7 +249,7 @@ def send_customer_message(
         response = repository.create_message(
             conversation_id=UUID(conversation["id"]),
             customer_id=current_user.customer_id,
-            content=content.strip(),
+            content=normalized_content,
         )
 
         if not response.data:
