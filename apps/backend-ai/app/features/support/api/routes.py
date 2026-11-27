@@ -15,11 +15,14 @@ from app.features.support.schemas.auth import (
 from app.features.support.schemas.ticket import (
     TicketDetailsResponse,
     TicketListResponse,
+    TicketResponse,
+    TicketUpdateRequest,
 )
 
 from app.features.support.services.ticket_service import (
     get_support_ticket_details,
     list_support_tickets,
+    update_support_ticket,
 )
 
 
@@ -88,4 +91,20 @@ def get_support_ticket(
     return get_support_ticket_details(
         current_user,
         ticket_id,
+    )
+
+
+@router.patch(
+    "/tickets/{ticket_id}",
+    response_model=TicketResponse,
+)
+def patch_support_ticket(
+    ticket_id: UUID,
+    payload: TicketUpdateRequest,
+    current_user: SupportUser = Depends(get_current_support_user),
+):
+    return update_support_ticket(
+        current_user,
+        ticket_id,
+        payload,
     )
