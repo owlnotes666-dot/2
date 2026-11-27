@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 TicketStatus = Literal[
@@ -25,6 +25,19 @@ MessageSenderType = Literal[
     "agent",
     "system",
 ]
+
+
+class TicketUpdateRequest(BaseModel):
+    status: TicketStatus | None = None
+    priority: TicketPriority | None = None
+    category_id: UUID | None = None
+    assigned_agent_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def validate_update_fields(self):
+        if not self.model_fields_set:
+            raise ValueError("At least one ticket field must be provided.")
+        return self
 
 
 class TicketCustomerResponse(BaseModel):
