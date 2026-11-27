@@ -182,7 +182,26 @@ def update_support_ticket(
                     detail="Agent must be a member of the ticket's team.",
                 )
 
-        updated = repository.update_ticket(ticket_id, fields)
+        # Assignment changes must go through the database RPC so that
+        # membership is revalidated and assignment history is written atomically.
+        assignment_requested = "assigned_agent_id" in fields
+        agent_id = fields.pop("assigned_agent_id", None)
+
+        if assignment_requested:
+            repository.assign_ticket_agent(
+                ticket_id,
+                UUID(agent_id) if agent_id is not None else None,
+            )
+
+        if fields:
+            updated = repository.update_ticket(ticket_id, fields)
+            if updated is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Ticket not found or you do not have permission to update it.",
+                )
+        else:
+            updated = repository.get_ticket(ticket_id)
 
         if updated is None:
             raise HTTPException(
