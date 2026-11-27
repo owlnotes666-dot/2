@@ -14,6 +14,7 @@ from app.features.support.schemas.ticket import (
     TicketDetailsResponse,
     TicketListResponse,
     TicketResponse,
+    TicketUpdateRequest,
 )
 
 
@@ -118,4 +119,77 @@ def get_support_ticket_details(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Unable to retrieve ticket details at this time.",
+        ) from None
+
+
+def update_support_ticket(
+    current_user: SupportUser,
+    ticket_id: UUID,
+    payload: TicketUpdateRequest,
+) -> TicketResponse:
+    try:
+        repository = _get_repository(current_user)
+        current_ticket = repository.get_ticket(ticket_id)
+
+        if current_ticket is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ticket not found.",
+            )
+
+        fields = payload.model_dump(exclude_unset=True)
+
+        category_id = fields.get("category_id")
+        if category_id is not None and not repository.category_exists(
+            category_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid ticket category.",
+            )
+
+        agent_id = fields.get("assigned_agent_id")
+        if agent_id is not None:
+            team = current_ticket.get("team") or {}
+            team_id = team.get("id")
+
+            if not team_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Ticket must belong to a team before agent assignment.",
+                )
+
+            if not repository.is_active_agent(agent_id):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Assigned user must be an active support agent.",
+                )
+
+            if not repository.is_agent_member_of_team(
+                agent_id,
+                UUID(team_id),
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Agent must be a member of the ticket's team.",
+                )
+
+        updated = repository.update_ticket(ticket_id, fields)
+
+        if updated is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ticket not found or you do not have permission to update it.",
+            )
+
+        return TicketResponse.model_validate(updated)
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception("Failed to update Support ticket.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to update ticket at this time.",
         ) from None
