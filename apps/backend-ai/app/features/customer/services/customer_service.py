@@ -107,6 +107,9 @@ def list_customer_tickets(
             page_size=page_size,
         )
 
+    except HTTPException:
+        raise
+
     except Exception:
         logger.exception("Failed to retrieve customer tickets.")
 
