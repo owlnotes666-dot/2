@@ -3,6 +3,32 @@ from uuid import UUID
 from supabase import Client
 
 
+TICKET_SELECT = """
+    id,
+    ticket_number,
+    subject,
+    status,
+    priority,
+    source,
+    created_at,
+    updated_at,
+    assigned_agent_id,
+    customer:customers!tickets_customer_id_fkey(
+        id,
+        full_name,
+        email
+    ),
+    team:teams!tickets_team_id_fkey(
+        id,
+        name
+    ),
+    category:ticket_categories!tickets_category_id_fkey(
+        id,
+        name
+    )
+"""
+
+
 class TicketRepository:
     def __init__(self, client: Client):
         self.client = client
@@ -81,38 +107,65 @@ class TicketRepository:
         response = (
             self.client.schema("support")
             .table("tickets")
-            .select(
-                """
-                id,
-                ticket_number,
-                subject,
-                status,
-                priority,
-                source,
-                created_at,
-                updated_at,
-                assigned_agent_id,
-                customer:customers!tickets_customer_id_fkey(
-                    id,
-                    full_name,
-                    email
-                ),
-                team:teams!tickets_team_id_fkey(
-                    id,
-                    name
-                ),
-                category:ticket_categories!tickets_category_id_fkey(
-                    id,
-                    name
-                )
-                """
-            )
+            .select(TICKET_SELECT)
             .eq("id", str(ticket_id))
             .limit(1)
             .execute()
         )
 
         return response.data[0] if response.data else None
+
+    def update_ticket(self, ticket_id: UUID, fields: dict):
+        response = (
+            self.client.schema("support")
+            .table("tickets")
+            .update(fields)
+            .eq("id", str(ticket_id))
+            .select(TICKET_SELECT)
+            .execute()
+        )
+
+        return response.data[0] if response.data else None
+
+    def category_exists(self, category_id: UUID) -> bool:
+        response = (
+            self.client.schema("support")
+            .table("ticket_categories")
+            .select("id")
+            .eq("id", str(category_id))
+            .limit(1)
+            .execute()
+        )
+        return bool(response.data)
+
+    def is_active_agent(self, agent_id: UUID) -> bool:
+        response = (
+            self.client.schema("support")
+            .table("profiles")
+            .select("id")
+            .eq("id", str(agent_id))
+            .eq("role", "agent")
+            .eq("is_active", True)
+            .limit(1)
+            .execute()
+        )
+        return bool(response.data)
+
+    def is_agent_member_of_team(
+        self,
+        agent_id: UUID,
+        team_id: UUID,
+    ) -> bool:
+        response = (
+            self.client.schema("support")
+            .table("team_members")
+            .select("profile_id")
+            .eq("profile_id", str(agent_id))
+            .eq("team_id", str(team_id))
+            .limit(1)
+            .execute()
+        )
+        return bool(response.data)
 
     def get_conversation(self, ticket_id: UUID):
         response = (
