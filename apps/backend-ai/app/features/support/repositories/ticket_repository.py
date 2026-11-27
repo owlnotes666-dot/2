@@ -127,6 +127,19 @@ class TicketRepository:
 
         return response.data[0] if response.data else None
 
+    def assign_ticket_agent(
+        self,
+        ticket_id: UUID,
+        agent_id: UUID | None,
+    ) -> None:
+        self.client.schema("support").rpc(
+            "assign_ticket_agent",
+            {
+                "p_ticket_id": str(ticket_id),
+                "p_agent_id": str(agent_id) if agent_id is not None else None,
+            },
+        ).execute()
+
     def category_exists(self, category_id: UUID) -> bool:
         response = (
             self.client.schema("support")
