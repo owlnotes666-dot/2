@@ -139,6 +139,14 @@ def update_support_ticket(
 
         fields = payload.model_dump(exclude_unset=True)
 
+        # PostgREST's JSON payload must contain serializable scalar values.
+        # Pydantic keeps UUID instances in model_dump(), so normalize them
+        # before passing the update dictionary to the Supabase client.
+        fields = {
+            key: str(value) if isinstance(value, UUID) else value
+            for key, value in fields.items()
+        }
+
         category_id = fields.get("category_id")
         if category_id is not None and not repository.category_exists(
             category_id
