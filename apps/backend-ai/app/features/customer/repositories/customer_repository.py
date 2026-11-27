@@ -22,6 +22,7 @@ class CustomerRepository:
     def list_tickets(
         self,
         *,
+        customer_id: UUID,
         page: int = 1,
         page_size: int = 20,
         status: str | None = None,
@@ -41,6 +42,7 @@ class CustomerRepository:
                 """,
                 count="exact",
             )
+            .eq("customer_id", str(customer_id))
         )
 
         if status:
@@ -56,7 +58,7 @@ class CustomerRepository:
             .execute()
         )
 
-    def get_ticket(self, ticket_id: UUID):
+    def get_ticket(self, ticket_id: UUID, *, customer_id: UUID):
         response = (
             self.client.schema("support")
             .table("tickets")
@@ -72,6 +74,7 @@ class CustomerRepository:
                 """
             )
             .eq("id", str(ticket_id))
+            .eq("customer_id", str(customer_id))
             .limit(1)
             .execute()
         )
